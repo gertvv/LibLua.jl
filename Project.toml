@@ -3,6 +3,9 @@ uuid = "f5185c72-1406-4543-baf6-194f0b6b6f2f"
 authors = ["Gert van Valkenhoef <gert@gertvv.nl> and contributors"]
 version = "0.1.0"
 
+[deps]
+Lua_jll = "a4086b1d-a96a-5d6b-8e4f-2030e6f25ba6"
+
 [compat]
 julia = "1"
 
