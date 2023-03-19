@@ -7,6 +7,13 @@ function square(L::Ptr{LibLua.LuaState})::Cint
     return 1
 end
 
+function mul_closure(L::Ptr{LibLua.LuaState})::Cint
+    x = lua_tonumber(L, lua_upvalueindex(1))
+    y = lua_tonumber(L, 1)
+    lua_pushnumber(L, x * y)
+    return 1
+end
+
 @testset "LibLua.jl" begin
     @testset "Push and access basic stack values" begin
         L = luaL_newstate()
@@ -64,20 +71,6 @@ end
         @test lua_tothread(L, -1) != C_NULL
     end
 
-    @testset "Getting globals" begin
-        L = luaL_newstate()
-        @test L != C_NULL
-        @test luaL_loadstring(L, "n = 3\nx = 5.2\ns = 'Test 123'\nt = {}") == LibLua.OK
-        @test lua_pcall(L, 0, -1) == LibLua.OK
-        @test lua_getglobal(L, "n") == LibLua.TNumber
-        @test lua_tointeger(L, -1) == 3
-        @test lua_getglobal(L, "x") == LibLua.TNumber
-        @test lua_tonumber(L, -1) == 5.2
-        @test lua_getglobal(L, "s") == LibLua.TString
-        @test lua_tostring(L, -1) == "Test 123"
-        @test lua_getglobal(L, "t") == LibLua.TTable
-    end
-
     @testset "Define and run a Lua function" begin
         L = luaL_newstate()
         @test L != C_NULL
@@ -101,4 +94,48 @@ end
         lua_close(L)
     end
 
+    @testset "Register a C function" begin
+        L = luaL_newstate()
+        @test L != C_NULL
+        fn = @cfunction(square, Cint, (Ptr{LuaState},))
+        lua_register(L, "square", fn)
+        @test lua_getglobal(L, "square") == LibLua.TFunction
+        lua_pushinteger(L, 3)
+        @test lua_pcall(L, 1, 1) == LibLua.OK
+        @test lua_tointegerx(L, -1) == (9, true)
+        lua_close(L)
+    end
+
+    @testset "Define and run a C closure" begin
+        L = luaL_newstate()
+        @test L != C_NULL
+        fn = @cfunction(mul_closure, Cint, (Ptr{LuaState},))
+        lua_pushinteger(L, 7)
+        lua_pushcclosure(L, fn, 1)
+        lua_pushinteger(L, 2)
+        @test lua_pcall(L, 1, 1) == LibLua.OK
+        @test lua_tointegerx(L, -1) == (14, true)
+        lua_close(L)
+    end
+
+    @testset "Setting and getting globals" begin
+        L = luaL_newstate()
+        @test L != C_NULL
+        lua_pushinteger(L, 2)
+        lua_setglobal(L, "m")
+        @test luaL_loadstring(L, "n = 3 * m\nx = 5.2\ns = 'Test 123'\nt = {}") == LibLua.OK
+        @test lua_pcall(L, 0, -1) == LibLua.OK
+        @test lua_getglobal(L, "n") == LibLua.TNumber
+        @test lua_tointeger(L, -1) == 6
+        @test lua_getglobal(L, "x") == LibLua.TNumber
+        @test lua_tonumber(L, -1) == 5.2
+        @test lua_getglobal(L, "s") == LibLua.TString
+        @test lua_tostring(L, -1) == "Test 123"
+        @test lua_getglobal(L, "t") == LibLua.TTable
+    end
+
+    @testset "Table manipulation" begin
+        # gettable, getfield, geti, rawget, rawgeti, rawgetp, createtable
+        # newtable, settable, setfield, seti, rawset, rawseti, rawsetp
+    end
 end

@@ -1,3 +1,13 @@
+# Pseudo-indices
+
+"""
+    lua_upvalueindex(i)
+
+Return the pseudo-index that represents the i-th upvalue of the running
+function. i must be in the range [1,256].
+"""
+lua_upvalueindex(i) = LUA_REGISTRYINDEX - i
+
 # --- Basic stack manipulation ---
 
 """

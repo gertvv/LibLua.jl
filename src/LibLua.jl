@@ -30,6 +30,10 @@ end
 
 @enum LuaLoadMode b t bt
 
+const LUAI_MAXSTACK  = 1_000_000
+const LUA_REGISTRYINDEX = -LUAI_MAXSTACK - 1000
+const LUA_EXTRASPACE = sizeof(Ptr{Cvoid})
+
 include("conversions.jl")
 
 include("state.jl")
@@ -96,17 +100,7 @@ export
     LuaStatus,
     LuaType,
     LuaLoadMode,
-    # state manipulation
-    lua_newstate,
-    lua_close,
-    lua_newthread,
-    lua_resetthread,
-    lua_atpanic,
-    lua_version,
-    luaL_newstate,
-    luaL_openlibs,
-    # stack manipulation
-    lau_absindex,
+    # --- conversions.jl
     # access functions (stack -> C)
     lua_type,
     lua_tonumberx,
@@ -120,7 +114,6 @@ export
     lua_touserdata,
     lua_tothread,
     lua_topointer,
-    # comparison and arithmetic functions
     # push functions (C -> stack)
     lua_pushnil,
     lua_pushnumber,
@@ -132,23 +125,73 @@ export
     lua_pushboolean,
     lua_pushlightuserdata,
     lua_pushthread,
+    lua_register,
+    # --- state.jl
+    # state manipulation
+    lua_newstate,
+    lua_close,
+    lua_newthread,
+    lua_resetthread,
+    lua_atpanic,
+    lua_version,
+    # lua_getextraspace,
+    luaL_newstate,
+    luaL_openlibs,
+    # --- stack.jl
+    # pseudo-indices
+    lua_upvalueindex,
+    # basic stack manipulation
+    lua_absindex,
+    lua_gettop,
+    lua_settop,
+    lua_pushvalue,
+    lua_rotate,
+    lua_copy,
+    lua_checkstack,
+    lua_xmove,
     # get functions (Lua -> stack)
     lua_getglobal,
+    lua_gettable,
     lua_getfield,
-    lua_settop,
-    lua_rotate,
+    lua_geti,
+    lua_rawget,
+    lua_rawgeti,
+    lua_rawgetp,
+    lua_createtable,
+    lua_newuserdatauv,
+    lua_getmetatable,
+    lua_getiuservalue,
+    # set functions (stack -> Lua)
+    lua_setglobal,
+    lua_settable,
+    lua_setfield,
+    lua_seti,
+    lua_rawset,
+    lua_rawseti,
+    lua_rawsetp,
+    lua_setmetatable,
+    lua_setiuservalue,
     # macros listed under "some useful macros"
     lua_pop,
+    lua_newtable,
+    lua_insert,
     lua_remove,
-    # set functions (stack -> Lua)
+    lua_replace,
+    # comparison and arithmetic functions
+    # --- code.jl
     # 'load' and 'call' functions
-    luaL_loadstring,
-    luaL_loadfilex,
-    luaL_loadfile,
     lua_callk,
     lua_call,
     lua_pcallk,
     lua_pcall,
+    lua_load,
+    lua_dump,
+    # miscellaneous functions
+    lua_error,
+    # functions from lauxlib.h
+    luaL_loadstring,
+    luaL_loadfilex,
+    luaL_loadfile,
     # coroutine functions
     # warning-related functions
     # garbage-collection functions and options
